@@ -2,30 +2,32 @@ package filesapi
 
 import (
 	"encoding/json"
-	"github.com/syncato/syncato-lib/auth"
-	"github.com/syncato/syncato-lib/logger"
-	"github.com/syncato/syncato-lib/storage"
-	"github.com/syncato/syncato-lib/storage/muxstorage"
+	"github.com/syncato/apis"
+	"github.com/syncato/lib/auth"
+	"github.com/syncato/lib/logger"
+	"github.com/syncato/lib/storage"
+	storagemux "github.com/syncato/lib/storage/mux"
 	"golang.org/x/net/context"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
-func stat(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func (api *APIFiles) stat(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	log := ctx.Value("log").(*logger.Logger)
-	storageMux := ctx.Value("storageMux").(*muxstorage.MuxStorage)
+	storageMux := ctx.Value("storageMux").(*storagemux.StorageMux)
 	authRes := ctx.Value("authRes").(*auth.AuthResource)
 
-	rawUri := strings.TrimPrefix(r.URL.Path, "/files/stat/")
+	rawUri := strings.TrimPrefix(r.URL.RequestURI(), strings.Join([]string{apis.APISROOT, api.GetID(), "stat/"}, "/"))
 
 	var children bool
 	queryChildren := r.URL.Query().Get("children")
 	if queryChildren != "" {
-		_, err := strconv.ParseBool(queryChildren)
+		ch, err := strconv.ParseBool(queryChildren)
 		if err != nil {
 			children = false
 		}
+		children = ch
 	}
 
 	meta, err := storageMux.Stat(authRes, rawUri, children)

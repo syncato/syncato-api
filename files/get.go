@@ -1,10 +1,11 @@
 package filesapi
 
 import (
-	"github.com/syncato/syncato-lib/auth"
-	"github.com/syncato/syncato-lib/logger"
-	"github.com/syncato/syncato-lib/storage"
-	"github.com/syncato/syncato-lib/storage/muxstorage"
+	"github.com/syncato/apis"
+	"github.com/syncato/lib/auth"
+	"github.com/syncato/lib/logger"
+	"github.com/syncato/lib/storage"
+	storagemux "github.com/syncato/lib/storage/mux"
 	"golang.org/x/net/context"
 	"io"
 	"net/http"
@@ -12,13 +13,12 @@ import (
 	"strings"
 )
 
-func get(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func (api *APIFiles) get(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	log := ctx.Value("log").(*logger.Logger)
-	storageMux := ctx.Value("storageMux").(*muxstorage.MuxStorage)
+	storageMux := ctx.Value("storageMux").(*storagemux.StorageMux)
 	authRes := ctx.Value("authRes").(*auth.AuthResource)
 
-	log.Info("GGGGEEEETTTTINGGG...", nil)
-	rawUri := strings.TrimPrefix(r.URL.Path, "/api/files/get/")
+	rawUri := strings.TrimPrefix(r.URL.Path, strings.Join([]string{apis.APISROOT, api.GetID(), "get/"}, "/"))
 
 	meta, err := storageMux.Stat(authRes, rawUri, false)
 	if err != nil {
@@ -34,7 +34,7 @@ func get(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 
 	if meta.IsCol {
 		// TODO: here we could do the zip based download for folders
-		log.Warn("GET not implemented for non-cols", nil)
+		log.Warn("Download of collections is not implemented", nil)
 		http.Error(w, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 		return
 	}

@@ -2,23 +2,24 @@ package filesapi
 
 import (
 	"encoding/json"
-	"github.com/syncato/syncato-lib/auth"
-	"github.com/syncato/syncato-lib/logger"
-	"github.com/syncato/syncato-lib/storage"
-	"github.com/syncato/syncato-lib/storage/muxstorage"
+	"github.com/syncato/apis"
+	"github.com/syncato/lib/auth"
+	"github.com/syncato/lib/logger"
+	"github.com/syncato/lib/storage"
+	storagemux "github.com/syncato/lib/storage/mux"
 	"golang.org/x/net/context"
 	"net/http"
 	"strings"
 )
 
-func put(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func (api *APIFiles) put(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	log := ctx.Value("log").(*logger.Logger)
-	storageMux := ctx.Value("storageMux").(*muxstorage.MuxStorage)
+	storageMux := ctx.Value("storageMux").(*storagemux.StorageMux)
 	authRes := ctx.Value("authRes").(*auth.AuthResource)
-	rawUri := strings.TrimPrefix(r.URL.Path, "/files/put/")
+	rawUri := strings.TrimPrefix(r.URL.Path, strings.Join([]string{apis.APISROOT, api.GetID(), "put/"}, "/"))
 
 	if r.Header.Get("Content-Range") != "" {
-		log.Warn("Content-Range not accepted on PUTS", nil)
+		log.Warn("Content-Range not accepted on PUTs", nil)
 		http.Error(w, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 		return
 	}
